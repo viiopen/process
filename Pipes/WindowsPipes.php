@@ -192,62 +192,65 @@ class WindowsPipes extends AbstractPipes
      */
     private function write($blocking, $close)
     {
-        if (empty($this->pipes)) {
-            return;
-        }
+	// BMM - commenting out due to security concerns. 12/22/2015
+	throw new \Exception('Writing to windows stdin not supported');
 
-        $this->unblock();
-
-        $r = null !== $this->input ? array('input' => $this->input) : null;
-        $w = isset($this->pipes[0]) ? array($this->pipes[0]) : null;
-        $e = null;
-
-        // let's have a look if something changed in streams
-        if (false === $n = @stream_select($r, $w, $e, 0, $blocking ? Process::TIMEOUT_PRECISION * 1E6 : 0)) {
-            // if a system call has been interrupted, forget about it, let's try again
-            // otherwise, an error occurred, let's reset pipes
-            if (!$this->hasSystemCallBeenInterrupted()) {
-                $this->pipes = array();
-            }
-
-            return;
-        }
-
-        // nothing has changed
-        if (0 === $n) {
-            return;
-        }
-
-        if (null !== $w && 0 < count($r)) {
-            $data = '';
-            while ($dataread = fread($r['input'], self::CHUNK_SIZE)) {
-                $data .= $dataread;
-            }
-
-            $this->inputBuffer .= $data;
-
-            if (false === $data || (true === $close && feof($r['input']) && '' === $data)) {
-                // no more data to read on input resource
-                // use an empty buffer in the next reads
-                $this->input = null;
-            }
-        }
-
-        if (null !== $w && 0 < count($w)) {
-            while (strlen($this->inputBuffer)) {
-                $written = fwrite($w[0], $this->inputBuffer, 2 << 18);
-                if ($written > 0) {
-                    $this->inputBuffer = (string) substr($this->inputBuffer, $written);
-                } else {
-                    break;
-                }
-            }
-        }
-
-        // no input to read on resource, buffer is empty and stdin still open
-        if ('' === $this->inputBuffer && null === $this->input && isset($this->pipes[0])) {
-            fclose($this->pipes[0]);
-            unset($this->pipes[0]);
-        }
+//        if (empty($this->pipes)) {
+//            return;
+//        }
+//
+//        $this->unblock();
+//
+//        $r = null !== $this->input ? array('input' => $this->input) : null;
+//        $w = isset($this->pipes[0]) ? array($this->pipes[0]) : null;
+//        $e = null;
+//
+//        // let's have a look if something changed in streams
+//        if (false === $n = @stream_select($r, $w, $e, 0, $blocking ? Process::TIMEOUT_PRECISION * 1E6 : 0)) {
+//            // if a system call has been interrupted, forget about it, let's try again
+//            // otherwise, an error occurred, let's reset pipes
+//            if (!$this->hasSystemCallBeenInterrupted()) {
+//                $this->pipes = array();
+//            }
+//
+//            return;
+//        }
+//
+//        // nothing has changed
+//        if (0 === $n) {
+//            return;
+//        }
+//
+//        if (null !== $w && 0 < count($r)) {
+//            $data = '';
+//            while ($dataread = fread($r['input'], self::CHUNK_SIZE)) {
+//                $data .= $dataread;
+//            }
+//
+//            $this->inputBuffer .= $data;
+//
+//            if (false === $data || (true === $close && feof($r['input']) && '' === $data)) {
+//                // no more data to read on input resource
+//                // use an empty buffer in the next reads
+//                $this->input = null;
+//            }
+//        }
+//
+//        if (null !== $w && 0 < count($w)) {
+//            while (strlen($this->inputBuffer)) {
+//                $written = fwrite($w[0], $this->inputBuffer, 2 << 18);
+//                if ($written > 0) {
+//                    $this->inputBuffer = (string) substr($this->inputBuffer, $written);
+//                } else {
+//                    break;
+//                }
+//            }
+//        }
+//
+//        // no input to read on resource, buffer is empty and stdin still open
+//        if ('' === $this->inputBuffer && null === $this->input && isset($this->pipes[0])) {
+//            fclose($this->pipes[0]);
+//            unset($this->pipes[0]);
+//        }
     }
 }
